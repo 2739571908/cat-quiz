@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#1a1a2e">
+<title>测测你是哪种猫奴</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs@master/qrcode.min.js"></script>
+<script src="store.js"></script>
+<style>
+:root{
+  --bg:#1a1a2e; --bg2:#242447; --card:#2d2d55; --card2:#35356a;
+  --text:#f5f3ef; --text2:#c7c5d6; --muted:#8f8da8;
+  --accent:#ff9a5c; --accent2:#ff6b9d; --gold:#ffd166;
+  --line:rgba(255,255,255,.08);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.6;
+  background-image:radial-gradient(circle at 20% 10%,rgba(255,107,157,.12),transparent 40%),
+                   radial-gradient(circle at 80% 90%,rgba(255,154,92,.10),transparent 40%);
+  min-height:100vh;
+}
+.app{max-width:560px;margin:0 auto;padding:20px 18px 80px;position:relative}
+button{font-family:inherit;cursor:pointer;border:none;outline:none}
+
+/* 通用卡片 */
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px 20px;margin-bottom:16px}
+
+/* 顶部 */
+.topbar{display:flex;align-items:center;gap:10px;margin-bottom:20px}
+.logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:22px}
+.topbar .brand{font-weight:700;font-size:17px}
+.topbar .brand small{display:block;font-weight:400;font-size:12px;color:var(--muted)}
+
+/* 标题区 */
+.hero{text-align:center;padding:32px 20px}
+.hero .emoji{font-size:52px;display:block;margin-bottom:12px}
+.hero h1{font-size:26px;font-weight:800;margin-bottom:10px;background:linear-gradient(135deg,#fff,var(--gold));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{color:var(--text2);font-size:14px}
+
+/* 输入框 */
+.field{margin-bottom:16px}
+.field label{display:block;font-size:13px;color:var(--text2);margin-bottom:8px;font-weight:600}
+.input{width:100%;padding:14px 16px;border-radius:12px;background:var(--bg2);border:1px solid var(--line);color:var(--text);font-size:16px;outline:none}
+.input:focus{border-color:var(--accent)}
+.input::placeholder{color:var(--muted)}
+
+/* 按钮 */
+.btn{display:block;width:100%;padding:15px;border-radius:14px;font-size:16px;font-weight:700;text-align:center;transition:.15s}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a1a2e}
+.btn-ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#ffb347);color:#3a2a00}
+.btn-sm{padding:10px 16px;font-size:14px;border-radius:10px;width:auto;display:inline-block}
+
+/* 答题 */
+.progress-wrap{margin-bottom:18px}
+.progress-text{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:8px}
+.progress-bar{height:8px;border-radius:8px;background:var(--bg2);overflow:hidden}
+.progress-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:8px;transition:width .3s}
+.q-num{font-size:13px;color:var(--accent);font-weight:700;margin-bottom:10px}
+.q-title{font-size:18px;font-weight:700;margin-bottom:18px;line-height:1.5}
+.opt{display:flex;align-items:center;width:100%;text-align:left;padding:15px 16px;margin-bottom:12px;border-radius:14px;background:var(--bg2);border:1px solid var(--line);color:var(--text);font-size:15px;transition:.15s}
+.opt:active{border-color:var(--accent)}
+.opt.sel{border-color:var(--accent);background:rgba(255,154,92,.10)}
+.opt .tag{display:flex;align-items:center;justify-content:center;flex-shrink:0;min-width:24px;height:24px;border-radius:50%;background:var(--card2);color:var(--text2);font-size:13px;margin-right:10px;font-weight:700}
+.opt .opt-text{flex:1;line-height:1.5}
+.nav-row{display:flex;gap:10px;margin-top:8px}
+.nav-row .btn{flex:1}
+
+/* 结果页 */
+.result-head{text-align:center;padding:10px 0 20px}
+.result-badge{display:inline-block;padding:6px 16px;border-radius:20px;background:rgba(255,107,157,.15);color:var(--accent2);font-size:13px;font-weight:700;margin-bottom:14px}
+.result-title{font-size:30px;font-weight:800;margin-bottom:8px}
+.result-emoji{font-size:46px;margin-bottom:10px}
+.result-quote{font-size:16px;color:var(--gold);font-weight:600;margin-bottom:6px}
+.result-sub{font-size:14px;color:var(--text2)}
+.section-title{font-size:15px;font-weight:700;margin:22px 0 12px;display:flex;align-items:center;gap:8px}
+.section-title::before{content:"";width:4px;height:16px;background:linear-gradient(var(--accent),var(--accent2));border-radius:2px}
+.desc{font-size:14px;color:var(--text2);line-height:1.8}
+.tag-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.tag{font-size:13px;padding:6px 12px;border-radius:20px;background:var(--bg2);color:var(--accent);border:1px solid var(--line)}
+.knowledge{background:var(--bg2);border-left:3px solid var(--gold);border-radius:10px;padding:14px 16px;font-size:14px;color:var(--text2);line-height:1.8;margin-top:8px}
+.knowledge b{color:var(--gold)}
+.chart-box{height:220px;margin-top:8px}
+.action-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+.action-row .btn{flex:1;min-width:130px}
+.hint{font-size:12px;color:var(--muted);text-align:center;margin-top:14px}
+
+/* 长图底部二维码区 */
+.qr-footer{text-align:center;padding:18px 20px 8px}
+.qr-footer #qrBox{display:inline-block;background:#fff;padding:10px;border-radius:12px}
+.qr-footer .qr-text{font-size:13px;color:var(--text2);margin-top:10px;line-height:1.7}
+.qr-footer img{display:block}
+
+/* 密码/锁 */
+.lock{text-align:center;padding:8px 0}
+.lock .emoji{font-size:44px}
+.lock h2{font-size:20px;margin:10px 0 6px}
+.lock p{font-size:13px;color:var(--muted);margin-bottom:16px}
+
+/* toast */
+.toast{position:fixed;left:50%;bottom:60px;transform:translateX(-50%) translateY(20px);background:#000;color:#fff;padding:10px 20px;border-radius:24px;font-size:14px;opacity:0;pointer-events:none;transition:.3s;z-index:999}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* 模态 */
+.modal-mask{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px}
+.modal-mask.show{display:flex}
+.modal{background:var(--card);border-radius:18px;padding:24px;max-width:400px;width:100%;text-align:center;border:1px solid var(--line)}
+.modal h3{font-size:18px;margin-bottom:12px}
+.modal p{font-size:14px;color:var(--text2);margin-bottom:18px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<div class="toast" id="toast"></div>
+<div class="modal-mask" id="modalMask">
+  <div class="modal">
+    <h3 id="modalTitle"></h3>
+    <p id="modalBody"></p>
+    <button class="btn btn-primary" onclick="closeModal()">知道了</button>
+  </div>
+</div>
+
+<script>
+/* ============ 密码库（改为共享数据层 store.js） ============ */
+// 密码由管理员后台统一生成，存 localStorage，测评端读取校验。
+// const PASSWORDS = [...] 已废弃，改用 CatQuizStore。
+const S = window.CatQuizStore;
+
+/* 店铺链接：二维码指向的地址，改成你的小红书店铺/商品页链接 */
+const SHOP_URL = "https://www.xiaohongshu.com"; // TODO: 替换为真实店铺链接
+
+/* ============ 题库 ============ */
+// 维度：A情感依赖 B控制边界 C审美仪式 D社交表达，各8题
+// 每题选项按 {t:文案, v:{A:..,B:..,C:..,D:..}} 计分（正向，值越大越倾向该维度）
+const QUESTIONS = [
+  // ---- A 情感依赖 ----
+  {d:"A",t:"早上出门上班前，你的最后一件事是？",o:[
+    {t:"蹲下跟猫认真交代「妈妈去给你挣猫粮了」",v:{A:3,B:0,C:1,D:1}},
+    {t:"摸摸头，说句「走啦」就走",v:{A:1,B:2,C:0,D:0}},
+    {t:"假装平静地走，其实回头看了它三次",v:{A:2,B:1,C:0,D:0}}]},
+  {d:"A",t:"猫躺在你身边打呼噜，你会？",o:[
+    {t:"一动不敢动，怕吵醒它，胳膊麻了也忍着",v:{A:3,B:1,C:0,D:0}},
+    {t:"开心，但该干嘛干嘛",v:{A:1,B:2,C:0,D:0}},
+    {t:"拍张照，然后继续忙自己的",v:{A:1,B:1,C:1,D:2}}]},
+  {d:"A",t:"猫今天没来蹭你，你的内心？",o:[
+    {t:"慌了，是不是我做错什么了",v:{A:3,B:1,C:0,D:0}},
+    {t:"有点失落，但想着「猫都这样」",v:{A:2,B:1,C:0,D:0}},
+    {t:"觉得它今天高冷得别有一番可爱",v:{A:1,B:2,C:1,D:0}}]},
+  {d:"A",t:"你出差/旅行时，最惦记的是？",o:[
+    {t:"猫，隔几小时就看监控、喊它名字",v:{A:3,B:1,C:0,D:0}},
+    {t:"让家人朋友照看，偶尔问一句",v:{A:2,B:2,C:0,D:0}},
+    {t:"放心交给自动喂食器，没怎么想",v:{A:0,B:3,C:0,D:0}}]},
+  {d:"A",t:"猫半夜踩你脸/啃你头发，你的第一反应？",o:[
+    {t:"亲一口，把它捞进被窝继续睡",v:{A:3,B:0,C:0,D:0}},
+    {t:"轻轻挪开，继续睡",v:{A:1,B:2,C:0,D:0}},
+    {t:"醒了，索性抱着它刷会儿手机",v:{A:2,B:1,C:0,D:1}}]},
+  {d:"A",t:"猫用头拱你、蹭你的腿，你的反应？",o:[
+    {t:"心都化了，立刻放下手里的事去陪它",v:{A:3,B:0,C:0,D:0}},
+    {t:"摸摸它，然后接着忙",v:{A:1,B:2,C:0,D:0}},
+    {t:"心里暗爽，但保持「高冷主人」人设",v:{A:2,B:1,C:0,D:0}}]},
+  {d:"A",t:"如果猫会说话，你最想听它说？",o:[
+    {t:"「你是我最爱的人」",v:{A:3,B:0,C:0,D:0}},
+    {t:"「我饿了」（至少它能依赖我）",v:{A:1,B:2,C:0,D:0}},
+    {t:"「我没事」（放心了）",v:{A:1,B:1,C:0,D:0}}]},
+  {d:"A",t:"你一个人在家时，会跟猫说话吗？",o:[
+    {t:"说，从早到晚，它是我唯一的听众",v:{A:3,B:0,C:0,D:1}},
+    {t:"偶尔说，比如「你干嘛呢」",v:{A:1,B:1,C:0,D:0}},
+    {t:"基本不说，我们靠眼神交流",v:{A:0,B:2,C:0,D:0}}]},
+
+  // ---- B 控制边界 ----
+  {d:"B",t:"猫跳上餐桌/灶台，你会？",o:[
+    {t:"立刻抱下来，还严肃批评它",v:{A:1,B:3,C:0,D:0}},
+    {t:"先拍个照，再抱下来",v:{A:1,B:2,C:1,D:1}},
+    {t:"随它去，开心就好",v:{A:2,B:0,C:1,D:0}}]},
+  {d:"B",t:"你给猫定「几点吃饭」的规矩吗？",o:[
+    {t:"严格按表，雷打不动",v:{A:0,B:3,C:0,D:0}},
+    {t:"大概固定，但架不住它撒娇会心软",v:{A:2,B:1,C:0,D:0}},
+    {t:"完全随缘，它饿了自己会叫",v:{A:1,B:0,C:0,D:0}}]},
+  {d:"B",t:"猫抓坏你的沙发/窗帘，你会？",o:[
+    {t:"心疼，但舍不得说它，只能自己肉疼",v:{A:3,B:0,C:0,D:0}},
+    {t:"轻轻教育一下，然后下单猫抓板",v:{A:1,B:2,C:0,D:0}},
+    {t:"觉得这是猫的天性，坏了就坏了吧",v:{A:2,B:0,C:0,D:0}}]},
+  {d:"B",t:"家里来客人，猫躲进床底，你会？",o:[
+    {t:"强行抱出来，介绍「这是我家宝」",v:{A:1,B:3,C:0,D:2}},
+    {t:"由它躲着，客人走了再安抚",v:{A:2,B:1,C:0,D:0}},
+    {t:"蹲下去陪它一起躲",v:{A:3,B:0,C:0,D:0}}]},
+  {d:"B",t:"给猫洗澡/剪指甲/喂药这些「为它好但它不喜欢」的事，你做得果断吗？",o:[
+    {t:"会，该做就做，为了它好",v:{A:0,B:3,C:0,D:0}},
+    {t:"会，但每次都心疼得不行",v:{A:2,B:1,C:0,D:0}},
+    {t:"能拖就拖，实在不行再弄",v:{A:1,B:0,C:0,D:0}}]},
+  {d:"B",t:"猫半夜闹腾、跑酷，你会？",o:[
+    {t:"起来管它，怕它摔着",v:{A:2,B:3,C:0,D:0}},
+    {t:"被吵醒，但随它折腾，自己蒙头睡",v:{A:1,B:2,C:0,D:0}},
+    {t:"觉得它精力旺盛，录个视频",v:{A:1,B:0,C:1,D:2}}]},
+  {d:"B",t:"你允许猫上床/进卧室吗？",o:[
+    {t:"当然，它睡哪都行，我让位",v:{A:3,B:0,C:0,D:0}},
+    {t:"可以，但我有我的底线",v:{A:1,B:2,C:0,D:0}},
+    {t:"有明确的「禁区」，其他随便",v:{A:0,B:3,C:0,D:0}}]},
+  {d:"B",t:"猫做出你不喜欢的行为，你会训练/纠正它吗？",o:[
+    {t:"会，认真查攻略、耐心训练",v:{A:0,B:3,C:0,D:0}},
+    {t:"会轻描淡写地纠正",v:{A:1,B:2,C:0,D:0}},
+    {t:"不会，猫开心最重要，我迁就它",v:{A:3,B:0,C:0,D:0}}]},
+
+  // ---- C 审美仪式 ----
+  {d:"C",t:"你手机里猫的照片，最多的类型是？",o:[
+    {t:"精致摆拍，滤镜灯光全拉满",v:{A:0,B:1,C:3,D:1}},
+    {t:"抓拍的搞笑/沙雕瞬间",v:{A:0,B:0,C:1,D:2}},
+    {t:"原图直出，一张都舍不得删",v:{A:2,B:0,C:1,D:0}}]},
+  {d:"C",t:"你会给猫买「没必要但可爱」的小衣服/帽子吗？",o:[
+    {t:"经常买，各种季节款",v:{A:1,B:0,C:3,D:1}},
+    {t:"偶尔买，图个开心",v:{A:0,B:1,C:2,D:0}},
+    {t:"只买实用品，不搞这些花哨的",v:{A:0,B:2,C:0,D:0}}]},
+  {d:"C",t:"你会给猫过生日吗？",o:[
+    {t:"会，蛋糕+拍照+发圈一条龙",v:{A:1,B:0,C:3,D:2}},
+    {t:"会，简单买个罐头加餐",v:{A:1,B:1,C:1,D:0}},
+    {t:"不会，觉得没必要",v:{A:0,B:2,C:0,D:0}}]},
+  {d:"C",t:"你给猫取的名字，属于哪种风格？",o:[
+    {t:"精心起的，有典故有意义（如「三千」「年年」）",v:{A:1,B:0,C:3,D:0}},
+    {t:"顺口好记的小名（如「咪咪」「球球」）",v:{A:0,B:1,C:1,D:0}},
+    {t:"随性起的，或者就叫「猫」",v:{A:0,B:2,C:0,D:0}}]},
+  {d:"C",t:"你会给猫布置专属空间吗？（猫窝、爬架、玩具区）",o:[
+    {t:"会，精心设计，比我的床还讲究",v:{A:1,B:0,C:3,D:0}},
+    {t:"会简单安排一下",v:{A:0,B:1,C:2,D:0}},
+    {t:"它自己会找地方睡，不用刻意",v:{A:0,B:2,C:0,D:0}}]},
+  {d:"C",t:"看到可爱的猫用品/周边，你的反应？",o:[
+    {t:"必须买，家里已经堆成山",v:{A:1,B:0,C:3,D:0}},
+    {t:"会心动，但克制",v:{A:0,B:1,C:2,D:0}},
+    {t:"基本无感",v:{A:0,B:2,C:0,D:0}}]},
+  {d:"C",t:"你会给猫拍「写真」或找人画猫吗？",o:[
+    {t:"会，还找人画过、订做过周边",v:{A:1,B:0,C:3,D:1}},
+    {t:"想过，但还没行动",v:{A:0,B:1,C:2,D:0}},
+    {t:"不会，原图就够可爱",v:{A:1,B:1,C:0,D:0}}]},
+  {d:"C",t:"节日（春节/圣诞）你会给猫准备仪式感吗？",o:[
+    {t:"会，新衣服、红包、年夜饭一样不落",v:{A:1,B:0,C:3,D:2}},
+    {t:"会意思一下，比如拍个照",v:{A:0,B:1,C:2,D:1}},
+    {t:"不会，猫又不看日历",v:{A:0,B:2,C:0,D:0}}]},
+
+  // ---- D 社交表达欲 ----
+  {d:"D",t:"你在社交平台晒猫的频率？",o:[
+    {t:"每天，猫是我的社交名片",v:{A:1,B:0,C:1,D:3}},
+    {t:"偶尔想起来发一次",v:{A:0,B:1,C:1,D:1}},
+    {t:"基本不发，自己偷偷欣赏",v:{A:1,B:1,C:0,D:0}}]},
+  {d:"D",t:"别人夸你家猫，你的反应？",o:[
+    {t:"超级开心，拉着人聊半小时",v:{A:1,B:0,C:0,D:3}},
+    {t:"笑着谢谢，心里美滋滋",v:{A:0,B:1,C:0,D:2}},
+    {t:"表面淡定，内心疯狂点头",v:{A:0,B:2,C:0,D:1}}]},
+  {d:"D",t:"你加了多少个猫友群/猫舍群？",o:[
+    {t:"十几个，天天在里面聊",v:{A:1,B:0,C:0,D:3}},
+    {t:"一两个，偶尔冒泡",v:{A:0,B:1,C:0,D:2}},
+    {t:"一个都没加，觉得麻烦",v:{A:0,B:2,C:0,D:0}}]},
+  {d:"D",t:"遇到养猫的陌生人，你会？",o:[
+    {t:"立刻掏出手机，交流养猫心得",v:{A:1,B:0,C:0,D:3}},
+    {t:"聊几句，交换经验",v:{A:0,B:1,C:0,D:2}},
+    {t:"微笑点头，不多说",v:{A:0,B:2,C:0,D:0}}]},
+  {d:"D",t:"你会给猫注册社交账号/做表情包吗？",o:[
+    {t:"会，还给猫建过专属账号",v:{A:1,B:0,C:1,D:3}},
+    {t:"做过表情包发给朋友",v:{A:0,B:0,C:1,D:2}},
+    {t:"没搞过，觉得夸张",v:{A:0,B:2,C:0,D:0}}]},
+  {d:"D",t:"你的微信头像/朋友圈背景是猫吗？",o:[
+    {t:"是，头像背景全是猫",v:{A:1,B:0,C:1,D:3}},
+    {t:"头像是我，背景是猫",v:{A:0,B:1,C:1,D:2}},
+    {t:"都不是，猫是隐私",v:{A:0,B:2,C:0,D:0}}]},
+  {d:"D",t:"有人不理解你为什么对猫这么好，你会？",o:[
+    {t:"据理力争，科普养猫的快乐",v:{A:0,B:0,C:0,D:3}},
+    {t:"一笑而过，不解释",v:{A:0,B:1,C:0,D:1}},
+    {t:"懒得理，懂的人自然懂",v:{A:0,B:2,C:0,D:0}}]},
+  {d:"D",t:"你最想让人知道你猫的哪个特质？",o:[
+    {t:"它的可爱和懂事，必须晒",v:{A:1,B:0,C:1,D:3}},
+    {t:"它的小怪癖，特有意思",v:{A:0,B:0,C:1,D:2}},
+    {t:"它的好，我自己知道就行",v:{A:1,B:2,C:0,D:0}}]}
+];
+
+/* ============ 结果库 ============ */
+const RESULTS = {
+  "humble":{
+    id:"humble",emoji:"🐱",name:"卑微铲屎官",
+    quote:"不是我在养猫，是猫在给我发工资。",
+    catTitle:"随叫随到的情绪充电宝",
+    sub:"高情感依赖 · 低边界 · 焦虑型依恋倾向",
+    desc:"你把猫当成了情感世界的重心。它一不理你，你就开始自我怀疑；它一靠近，你就满血复活。你不是在「养」一只猫，你是在用一只猫，填补心里那个渴望被需要的位置。",
+    tags:["猫是我的情绪搭子","离了猫活不了","主子奴","黏人型"],
+    know:"把过度的情感寄托在宠物身上，常常是亲密关系里未被满足的「被需要感」的投射。心理学上这叫「焦虑型依恋」——你越怕失去，就越想抓住。",
+    radar:[90,20,50,65],
+    cat:"在猫眼里，你是个「随时待命的情绪充电宝」。它一个眼神，你就屁颠屁颠跑过来。它其实很享受这种被无条件爱着的感觉——只是偶尔也会想，铲屎官你得多爱爱自己呀。"
+  },
+  "proud":{
+    id:"proud",emoji:"😼",name:"傲娇主人型",
+    quote:"猫是我的，但我是我自己的。",
+    catTitle:"靠谱但有距离感的人类",
+    sub:"高边界 · 低依赖 · 安全型依恋",
+    desc:"你爱猫，但从不被猫拿捏。该立的规矩一条不少，该给的疼爱一点不缺。你和猫之间有一种成年人的默契：我照顾你，但我们各自有各自的生活。",
+    tags:["我养猫但不被猫养","分寸感","理性铲屎官"],
+    know:"健康的宠物关系是「亲密但不共生」。安全型依恋的人能在付出与自我之间找到平衡——这恰恰是心理学里最稳定的关系模式。",
+    radar:[25,85,25,30],
+    cat:"在猫眼里，你是个「靠谱但有距离感的人类」。它知道跟你撒娇不会一直有求必应，反而更敬你三分。它其实很安心，因为它知道你不会突然崩溃、也不会突然离开。"
+  },
+  "parent":{
+    id:"parent",emoji:"🍼",name:"把猫当孩子养",
+    quote:"我连自己都照顾不好，却把它照顾成了小皇帝。",
+    catTitle:"事无巨细的操劳老母亲",
+    sub:"高尽责 · 高仪式感 · 补偿心理",
+    desc:"你给猫买小衣服、过生日、拍写真、布置比你还讲究的小窝。你把自己舍不得花的钱、舍不得花的心思，全给了它。表面看是「富养猫」，其实你是在富养那个曾经被亏待的自己。",
+    tags:["我主子三岁半","富养猫","仪式感狂魔","操碎心"],
+    know:"对宠物的过度付出，有时是对「被照顾」渴望的补偿。你在猫身上实践了一种你希望被对待的方式——这其实是一种温柔的自我疗愈。",
+    radar:[85,75,95,75],
+    cat:"在猫眼里，你是个「事无巨细的操劳老母亲」。它早就习惯了饭来张口、衣来伸手，甚至觉得这是天经地义。它偶尔会想：这个人类，是不是也该对自己好一点？"
+  },
+  "cloud":{
+    id:"cloud",emoji:"📱",name:"云吸猫专业户",
+    quote:"养猫三年，猫还不认识我，但我认识全网每一只猫。",
+    catTitle:"把爱存进相册的人类",
+    sub:"高分享欲 · 低现实投入 · 情绪代偿",
+    desc:"你在网上看猫、存猫、发猫、聊猫，乐此不疲。比起现实里伺候一只真猫，你更享受「云吸」这种低成本高快乐的方式。你不是不爱猫，你是更爱那个不费劲就能获得的治愈。",
+    tags:["网上有猫就够了","存图狂魔","猫片收藏家"],
+    know:"「云吸猫」是一种典型的高性价比情绪代偿——用最小的现实成本，换取陪伴感和愉悦感。这是当代年轻人很聪明的自我照顾方式。",
+    radar:[40,30,55,95],
+    cat:"在猫眼里，你有点神秘。它很少见到你，却总能在你手机里看到自己的同类。它想：这个人类，是把对猫的爱，都存进相册里了吗？"
+  },
+  "buddha":{
+    id:"buddha",emoji:"🧘",name:"佛系室友型",
+    quote:"我和猫，是最熟悉的陌生人，主打一个互相尊重。",
+    catTitle:"安静可靠的室友",
+    sub:"低依赖 · 高边界 · 疏离型依恋倾向",
+    desc:"你和猫维持着一种舒适的距离感：它不来烦你，你也不强求它。你给它水和粮，它给你一个安静的伴。这种「互不打扰、互相尊重」的相处，让你觉得很自在。",
+    tags:["同居不打扰","独立","彼此留白"],
+    know:"疏离型依恋的人习惯用「保持距离」来避免失望和受伤。宠物成了最安全的陪伴——因为它的爱不索取、不评判，刚好给了你想要的松弛感。",
+    radar:[15,75,20,15],
+    cat:"在猫眼里，你是个「安静可靠的室友」。它喜欢你给的空间感，也享受你不吵不闹的陪伴。你们之间没有热烈的爱，却有踏实的默契——这很难得。"
+  },
+  "mutual":{
+    id:"mutual",emoji:"💞",name:"双向奔赴型",
+    quote:"它治愈了我，我也把它宠成了全世界最幸福的小猫。",
+    catTitle:"全世界最好的人类",
+    sub:"安全型依恋 · 高宜人 · 关系平衡",
+    desc:"你和猫之间，是一场势均力敌的双向奔赴。你给它爱，它给你治愈；你懂它的需求，它接住你的情绪。你不是在「养宠物」，你是在经营一段健康又温柔的关系。",
+    tags:["我们互相成就","最佳拍档","灵魂猫友"],
+    know:"安全型依恋的人能把「给予」和「获得」平衡得很好——既不索取过度，也不付出失衡。这种能力，放到任何一段关系里都是稀缺的。",
+    radar:[80,70,75,70],
+    cat:"在猫眼里，你是「全世界最好的人类」。它信任你、依赖你，也愿意把最柔软的一面给你。它想：遇见你，是我猫生最大的幸运。"
+  }
+};
+
+/* 结果判定：根据四维得分映射 */
+function judgeResult(s){
+  // s = {A,B,C,D} 各维度得分（0-24）
+  const avg = (s.A+s.B+s.C+s.D)/4;
+  const high = t=>t>=18, low=t=>t<=9;
+  if(high(s.A)&&high(s.B)&&high(s.C)&&high(s.D)) return "parent";
+  if(high(s.A)&&low(s.B)) return "humble";
+  if(low(s.A)&&high(s.B)&&low(s.C)) return "proud";
+  if(low(s.A)&&high(s.B)) return "buddha";
+  if(high(s.D)&&low(s.A)&&low(s.B)) return "cloud";
+  // 双向奔赴：各维度较均衡
+  return "mutual";
+}
+
+/* ============ 状态 ============ */
+let state = {step:"password", answers:{}, current:0, resultId:null, passToken:null, used:0, maxUses:3};
+
+const app = document.getElementById("app");
+
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 2200);
+}
+function openModal(title, body){
+  document.getElementById("modalTitle").textContent = title;
+  document.getElementById("modalBody").textContent = body;
+  document.getElementById("modalMask").classList.add("show");
+}
+function closeModal(){
+  document.getElementById("modalMask").classList.remove("show");
+}
+
+/* ============ 密码逻辑（Supabase 异步数据层） ============ */
+// 剩余次数 / 上限：在进入结果页时由 verify 结果缓存到 state
+function getUsed(){ return state.used || 0; }
+function getMax(){ return state.maxUses || 3; }
+
+/* ============ 渲染 ============ */
+function render(){
+  app.innerHTML = "";
+  if(state.step==="password") renderPassword();
+  else if(state.step==="quiz") renderQuiz();
+  else if(state.step==="result") renderResult();
+  else if(state.step==="unlock") renderUnlock();
+}
+
+/* --- 密码页 --- */
+function renderPassword(){
+  const el = document.createElement("div");
+  el.innerHTML = `
+    <div class="topbar"><div class="logo">🐱</div><div class="brand">测测你是哪种猫奴<small>32题 · 4维度 · 约3分钟</small></div></div>
+    <div class="hero">
+      <span class="emoji">🐈</span>
+      <h1>测测你是哪种猫奴</h1>
+      <p>一个用「养猫」照见「你自己」的趣味人格测评</p>
+    </div>
+    <div class="card">
+      <div class="field">
+        <label>请输入测评密码</label>
+        <input class="input" id="pwInput" type="text" placeholder="购买后由客服提供，每密码可测3次" autocomplete="off">
+      </div>
+      <button class="btn btn-primary" id="pwBtn">验证并开始</button>
+      <p class="hint">没有密码？前往店铺购买后，联系客服领取</p>
+    </div>
+  `;
+  app.appendChild(el);
+  document.getElementById("pwBtn").addEventListener("click", checkPassword);
+  document.getElementById("pwInput").addEventListener("keydown", e=>{ if(e.key==="Enter") checkPassword(); });
+}
+
+async function checkPassword(){
+  const v = document.getElementById("pwInput").value.trim().toUpperCase();
+  if(!v){ toast("请输入密码"); return; }
+  const btn = document.getElementById("pwBtn");
+  btn.disabled = true; btn.textContent = "验证中…";
+  try {
+    const res = await S.verify(v, "quiz");
+    if(res.reason === "not_found"){ toast("密码不正确，请核对后重试"); return; }
+    if(res.reason === "disabled"){ toast("该密码已停用，请联系客服"); return; }
+    if(res.reason === "exhausted"){
+      openModal("已达使用上限","该密码的测评次数已用完。如需继续，请购买新的测评密码，或联系客服。");
+      return;
+    }
+    if(res.ok){
+      await S.consume(v, "quiz");
+      state.passToken = v;
+      state.used = (res.used || 0) + 1;
+      state.maxUses = res.max_uses || 3;
+      state.step = "quiz";
+      state.answers = {};
+      state.current = 0;
+      state.resultId = null;
+      render();
+    }
+  } catch(e) {
+    toast("网络异常，请稍后重试");
+    console.error(e);
+  } finally {
+    btn.disabled = false; btn.textContent = "验证并开始";
+  }
+}
+
+/* --- 答题页 --- */
+function renderQuiz(){
+  app.innerHTML = "";
+  const q = QUESTIONS[state.current];
+  const total = QUESTIONS.length;
+  const pct = Math.round((state.current)/total*100);
+  const el = document.createElement("div");
+  let opts = "";
+  const tags = ["A","B","C"];
+  q.o.forEach((opt,i)=>{
+    const sel = state.answers[state.current]===i ? "sel":"";
+    opts += `<button class="opt ${sel}" data-i="${i}"><span class="tag">${tags[i]}</span>${opt.t}</button>`;
+  });
+  el.innerHTML = `
+    <div class="topbar"><div class="logo">🐱</div><div class="brand">测测你是哪种猫奴<small>${state.current+1}/${total} 题</small></div></div>
+    <div class="progress-wrap">
+      <div class="progress-text"><span>答题进度</span><span>${pct}%</span></div>
+      <div class="progress-bar"><i style="width:${pct}%"></i></div>
+    </div>
+    <div class="card">
+      <div class="q-num">第 ${state.current+1} 题 · 维度 ${dimName(q.d)}</div>
+      <div class="q-title">${q.t}</div>
+      <div id="opts">${opts}</div>
+      <div class="nav-row">
+        <button class="btn btn-ghost" id="prevBtn" ${state.current===0?"disabled style=opacity:.4":""}>上一题</button>
+        <button class="btn btn-primary" id="nextBtn" ${state.answers[state.current]===undefined?"disabled style=opacity:.4":""}>${state.current===total-1?"查看结果":"下一题"}</button>
+      </div>
+    </div>
+  `;
+  app.appendChild(el);
+  const optsBox = document.getElementById("opts");
+  optsBox.querySelectorAll(".opt").forEach(b=>{
+    b.addEventListener("click", ()=>{
+      state.answers[state.current] = parseInt(b.dataset.i);
+      renderQuiz();
+    });
+  });
+  document.getElementById("prevBtn").addEventListener("click", ()=>{ state.current--; renderQuiz(); });
+  document.getElementById("nextBtn").addEventListener("click", ()=>{
+    if(state.current === total-1){ calcResult(); }
+    else { state.current++; renderQuiz(); }
+  });
+}
+
+function dimName(d){ return {A:"情感依赖",B:"控制边界",C:"审美仪式",D:"社交表达"}[d]; }
+
+function calcResult(){
+  const s = {A:0,B:0,C:0,D:0};
+  QUESTIONS.forEach((q,i)=>{
+    const ans = state.answers[i];
+    if(ans===undefined) return;
+    const v = q.o[ans].v;
+    s.A += v.A||0; s.B += v.B||0; s.C += v.C||0; s.D += v.D||0;
+  });
+  state.resultId = judgeResult(s);
+  state.scores = s;
+  state.step = "result";
+  render();
+  window.scrollTo(0,0);
+}
+
+/* --- 二维码渲染 --- */
+function renderQR(containerId, text, size){
+  const box = document.getElementById(containerId);
+  if(!box) return;
+  if(typeof QRCode !== "undefined"){
+    box.innerHTML = "";
+    new QRCode(box, { text: text, width: size, height: size, colorDark: "#1a1a2e", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M });
+  } else {
+    // CDN 失败降级：显示链接文字
+    box.innerHTML = `<div style="font-size:11px;color:#1a1a2e;word-break:break-all;padding:8px;background:#fff;border-radius:8px;max-width:${size*1.6}px;margin:0 auto">${text}</div>`;
+  }
+}
+
+/* --- 结果页 --- */
+function renderResult(){
+  const r = RESULTS[state.resultId];
+  const s = state.scores;
+  const dims = ["情感依赖","控制边界","审美仪式","社交表达"];
+  const el = document.createElement("div");
+  el.innerHTML = `
+    <div id="resultCard">
+      <div class="topbar"><div class="logo">🐱</div><div class="brand">测测你是哪种猫奴<small>测评结果</small></div></div>
+      <div class="result-head">
+        <div class="result-emoji">${r.emoji}</div>
+        <div class="result-badge">你的猫奴人格</div>
+        <div class="result-title">${r.name}</div>
+        <div class="result-quote">「${r.quote}」</div>
+        <div class="result-sub">${r.sub}</div>
+      </div>
+      <div class="card">
+        <div class="section-title">人格解读</div>
+        <div class="desc">${r.desc}</div>
+        <div class="tag-list">${r.tags.map(t=>`<span class="tag">#${t}</span>`).join("")}</div>
+      </div>
+      <div class="card">
+        <div class="section-title">你的四维画像</div>
+        <div class="chart-box" id="radarChart"></div>
+      </div>
+      <div class="card">
+        <div class="section-title">冷知识</div>
+        <div class="knowledge"><b>为什么你会这样？</b><br>${r.know}</div>
+      </div>
+      <div class="qr-footer">
+        <div id="qrBox"></div>
+        <div class="qr-text">扫码进店铺，解锁全部人格报告<br><span style="font-size:11px;color:var(--muted)">测测你是哪种猫奴 · 趣味测评</span></div>
+      </div>
+    </div>
+
+    ${state.shareView ? `
+      <div class="card" style="text-align:center;margin-top:16px">
+        <div class="desc">这是 <b style="color:var(--gold)">${r.name}</b> 的测评结果</div>
+        <div class="desc" style="margin-top:6px">你也来测测，看你是什么猫奴人格 👇</div>
+        <div style="margin-top:14px"><button class="btn btn-primary" id="gotoTestBtn">🐱 我也要测</button></div>
+        <div class="hint">扫码或点击上方按钮 · 购买后即可开始测评</div>
+      </div>
+    ` : `
+      <div class="card" id="unlockCard">
+        <div class="section-title">✨ 解锁隐藏彩蛋</div>
+        <div class="desc">想知道「猫眼里的你」是什么样的吗？<b style="color:var(--gold)">给店铺一个好评</b>，把好评截图发给客服，即可免费领取彩蛋解锁密码。</div>
+        <div id="unlockQr" style="text-align:center;margin:14px 0 10px"></div>
+        <div class="hint" style="margin-top:0">👆 扫码进店 → 好评 → 发截图给客服 → 领彩蛋密码</div>
+        <div style="margin-top:12px"><button class="btn btn-gold" id="unlockBtn">🔓 输入彩蛋密码</button></div>
+      </div>
+
+      <div class="action-row">
+        <button class="btn btn-primary" id="saveBtn">📷 保存长图</button>
+        <button class="btn btn-ghost" id="shareBtn">🔗 复制分享链接</button>
+      </div>
+      <div class="action-row">
+        <button class="btn btn-ghost" id="retestBtn">🔄 再测一次（剩余 ${getMax() - getUsed()} 次）</button>
+        <button class="btn btn-gold" id="praiseBtn">⭐ 好评有礼</button>
+      </div>
+    `}
+  `;
+  app.appendChild(el);
+  // 渲染二维码（长图内1个；非分享模式彩蛋区再加1个）
+  renderQR("qrBox", SHOP_URL, 110);
+  if(!state.shareView) renderQR("unlockQr", SHOP_URL, 100);
+
+  // 雷达图（容错：CDN 加载失败时不影响结果页其他功能）
+  try {
+    if (typeof echarts !== "undefined") {
+      const chart = echarts.init(document.getElementById("radarChart"));
+      chart.setOption({
+        radar:{
+          indicator: dims.map(d=>({name:d,max:24})),
+          center:["50%","52%"], radius:"65%",
+          axisName:{color:"#c7c5d6",fontSize:12},
+          splitArea:{areaStyle:{color:["rgba(255,255,255,.02)","rgba(255,255,255,.04)"]}},
+          splitLine:{lineStyle:{color:"rgba(255,255,255,.12)"}},
+          axisLine:{lineStyle:{color:"rgba(255,255,255,.12)"}}
+        },
+        series:[{
+          type:"radar",
+          data:[{value:[s.A,s.B,s.C,s.D],name:r.name,
+            areaStyle:{color:"rgba(255,154,92,.35)"},
+            lineStyle:{color:"#ff9a5c",width:2},
+            itemStyle:{color:"#ff9a5c"}}]
+        }]
+      });
+    } else {
+      // 降级：用文字条形图展示四维
+      document.getElementById("radarChart").innerHTML = dims.map((d,i)=>{
+        const vals=[s.A,s.B,s.C,s.D];
+        const pct=Math.round(vals[i]/24*100);
+        return `<div style="margin:10px 0"><div style="font-size:12px;color:var(--muted);margin-bottom:4px">${d} ${pct}%</div><div style="height:10px;background:var(--bg2);border-radius:6px;overflow:hidden"><i style="display:block;height:100%;width:${pct}%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:6px"></i></div></div>`;
+      }).join("");
+    }
+  } catch(e) { console.warn("雷达图渲染失败", e); }
+
+  if(state.shareView){
+    document.getElementById("gotoTestBtn").addEventListener("click", ()=>{
+      state.shareView = false;
+      state.step = "password";
+      render();
+    });
+  } else {
+    document.getElementById("unlockBtn").addEventListener("click", ()=>{ state.step="unlock"; render(); });
+    document.getElementById("saveBtn").addEventListener("click", saveImage);
+    document.getElementById("shareBtn").addEventListener("click", shareResult);
+    document.getElementById("retestBtn").addEventListener("click", async ()=>{
+      // 次数用尽则弹窗提示
+      if(getUsed() >= getMax()){
+        openModal("次数已用完","该密码的测评次数已用完，如需再测请购买新的测评密码。");
+        return;
+      }
+      // 扣减一次并进入答题
+      try {
+        await S.consume(state.passToken, "quiz");
+        state.used = getUsed() + 1;
+        state.step="quiz"; state.answers={}; state.current=0; state.resultId=null; render();
+      } catch(e){ toast("网络异常，请稍后重试"); console.error(e); }
+    });
+    document.getElementById("praiseBtn").addEventListener("click", ()=>{
+      openModal("好评有礼","店铺好评之后，联系客服发送好评截图，即可获得 1 元返现。感谢你的支持！");
+    });
+  }
+}
+
+/* --- 解锁页（第二段：猫眼里的你，好评获取） --- */
+function renderUnlock(){
+  const el = document.createElement("div");
+  el.innerHTML = `
+    <div class="topbar"><div class="logo">🔓</div><div class="brand">隐藏彩蛋<small>猫眼里的你</small></div></div>
+    <div class="card lock">
+      <div class="emoji">🐈‍⬛</div>
+      <h2>猫眼里的你</h2>
+      <p>这是好评专属彩蛋。<br>给店铺好评后，把截图发给客服，即可领取彩蛋密码。</p>
+      <div class="field" style="text-align:left">
+        <label>请输入彩蛋密码</label>
+        <input class="input" id="unlockInput" type="text" placeholder="好评后由客服提供" autocomplete="off">
+      </div>
+      <button class="btn btn-primary" id="unlockConfirm">解锁并查看</button>
+      <button class="btn btn-ghost" id="backBtn" style="margin-top:10px">返回结果页</button>
+    </div>
+  `;
+  app.appendChild(el);
+  document.getElementById("unlockConfirm").addEventListener("click", doUnlock);
+  document.getElementById("unlockInput").addEventListener("keydown", e=>{ if(e.key==="Enter") doUnlock(); });
+  document.getElementById("backBtn").addEventListener("click", ()=>{ state.step="result"; render(); });
+}
+
+async function doUnlock(){
+  const v = document.getElementById("unlockInput").value.trim().toUpperCase();
+  if(!v){ toast("请输入彩蛋密码"); return; }
+  const btn = document.getElementById("unlockConfirm");
+  btn.disabled = true; btn.textContent = "解锁中…";
+  try {
+    const res = await S.verify(v, "egg");
+    if(res.reason === "not_found"){ toast("彩蛋密码不正确，请核对后重试"); return; }
+    if(res.reason === "exhausted"){ toast("该彩蛋密码已使用过，如需再次查看请联系客服"); return; }
+    if(res.reason === "disabled"){ toast("该彩蛋密码已停用"); return; }
+    if(res.ok){
+      await S.consume(v, "egg");
+      renderCatView();
+    }
+  } catch(e){ toast("网络异常，请稍后重试"); console.error(e); }
+  finally { btn.disabled = false; btn.textContent = "解锁并查看"; }
+}
+
+function renderCatView(){
+  const r = RESULTS[state.resultId];
+  const el = document.createElement("div");
+  el.innerHTML = `
+    <div id="resultCard">
+      <div class="topbar"><div class="logo">🔓</div><div class="brand">隐藏彩蛋<small>猫眼里的你</small></div></div>
+      <div class="result-head">
+        <div class="result-emoji">🐈‍⬛</div>
+        <div class="result-badge">猫眼里的你 · 隐藏彩蛋</div>
+        <div class="result-title">你是「${r.catTitle||"特别的人类"}」</div>
+        <div class="result-sub">基于你的「${r.name}」人格，反推猫对你的真实看法</div>
+      </div>
+      <div class="card">
+        <div class="section-title">猫的内心独白</div>
+        <div class="desc">${r.cat}</div>
+      </div>
+      <div class="card">
+        <div class="section-title">你的猫奴人格</div>
+        <div class="desc">${r.emoji} ${r.name} · ${r.quote}</div>
+      </div>
+      <div class="action-row">
+        <button class="btn btn-primary" id="saveBtn2">📷 保存长图</button>
+        <button class="btn btn-ghost" id="shareBtn2">🔗 复制分享链接</button>
+      </div>
+      <div class="action-row">
+        <button class="btn btn-ghost" id="backResult">🔄 返回结果页</button>
+      </div>
+    </div>
+  `;
+  app.innerHTML=""; app.appendChild(el);
+  document.getElementById("saveBtn2").addEventListener("click", saveImage);
+  document.getElementById("shareBtn2").addEventListener("click", shareResult);
+  document.getElementById("backResult").addEventListener("click", ()=>{ state.step="result"; render(); });
+}
+
+/* --- 保存长图 --- */
+function saveImage(){
+  const card = document.getElementById("resultCard");
+  if (typeof html2canvas === "undefined") {
+    toast("组件未加载完成，请检查网络后重试，或手动截图保存");
+    return;
+  }
+  toast("正在生成图片…");
+  html2canvas(card,{backgroundColor:"#1a1a2e",scale:2,useCORS:true}).then(canvas=>{
+    const link = document.createElement("a");
+    link.download = "猫奴人格测评结果.png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+    toast("图片已保存");
+  }).catch(e=>{ toast("保存失败，请尝试手动截图"); });
+}
+
+/* --- 分享链接 --- */
+function shareResult(){
+  const id = state.resultId;
+  const url = location.href.split("#")[0].split("?")[0] + "?result=" + id;
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(()=>toast("链接已复制，快去分享吧")).catch(()=>fallbackCopy(url));
+  } else fallbackCopy(url);
+}
+function fallbackCopy(text){
+  const ta = document.createElement("textarea");
+  ta.value = text; document.body.appendChild(ta); ta.select();
+  try{ document.execCommand("copy"); toast("链接已复制"); }catch(e){ toast("复制失败，请手动复制"); }
+  document.body.removeChild(ta);
+}
+
+/* ============ 分享链接进来：只展示结果+二维码承接页 ============ */
+function initFromUrl(){
+  const p = new URLSearchParams(location.search);
+  const rid = p.get("result");
+  if(rid && RESULTS[rid]){
+    state.resultId = rid;
+    state.scores = {A:16,B:16,C:16,D:16};
+    state.shareView = true;   // 分享承接模式：只看到冷知识+二维码
+    state.step = "result";
+    render();
+  } else {
+    state.shareView = false;
+    render();
+  }
+}
+
+initFromUrl();
+</script>
+</body>
+</html>

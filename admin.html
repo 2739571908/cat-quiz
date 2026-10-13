@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#1a1a2e">
+<title>猫奴测评 · 管理后台</title>
+<script src="store.js"></script>
+<style>
+:root{
+  --bg:#1a1a2e; --bg2:#242447; --card:#2d2d55; --card2:#35356a;
+  --text:#f5f3ef; --text2:#c7c5d6; --muted:#8f8da8;
+  --accent:#ff9a5c; --accent2:#ff6b9d; --gold:#ffd166; --green:#4ade80; --red:#f87171;
+  --line:rgba(255,255,255,.08);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh;background-image:radial-gradient(circle at 15% 5%,rgba(255,107,157,.10),transparent 40%),radial-gradient(circle at 85% 95%,rgba(255,154,92,.08),transparent 40%)}
+.wrap{max-width:760px;margin:0 auto;padding:20px 16px 80px}
+button{font-family:inherit;cursor:pointer;border:none;outline:none}
+input,select{font-family:inherit}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.topbar .brand{display:flex;align-items:center;gap:10px}
+.logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:22px}
+.brand-name{font-weight:700;font-size:17px}
+.brand-name small{display:block;font-weight:400;font-size:12px;color:var(--muted)}
+.btn{display:inline-block;padding:11px 18px;border-radius:12px;font-size:14px;font-weight:700;text-align:center;transition:.15s}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#1a1a2e}
+.btn-ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#ffb347);color:#3a2a00}
+.btn-sm{padding:7px 12px;font-size:12px;border-radius:8px}
+.btn-danger{background:rgba(248,113,113,.15);color:var(--red);border:1px solid rgba(248,113,113,.3)}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:16px}
+.card h2{font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.card h2::before{content:"";width:4px;height:16px;background:linear-gradient(var(--accent),var(--accent2));border-radius:2px}
+
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.stat{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:16px 14px;text-align:center}
+.stat .num{font-size:26px;font-weight:800;color:var(--gold)}
+.stat .num.g{color:var(--green)} .stat .num.r{color:var(--red)} .stat .num.a{color:var(--accent)}
+.stat .lbl{font-size:12px;color:var(--muted);margin-top:4px}
+
+.field{margin-bottom:14px}
+.field label{display:block;font-size:13px;color:var(--text2);margin-bottom:6px;font-weight:600}
+.input{width:100%;padding:12px 14px;border-radius:10px;background:var(--bg2);border:1px solid var(--line);color:var(--text);font-size:15px;outline:none}
+.input:focus{border-color:var(--accent)}
+.row2{display:flex;gap:12px}
+.row2 .field{flex:1}
+.gen-result{margin-top:12px;background:var(--bg2);border-radius:10px;padding:14px;max-height:260px;overflow:auto;display:none}
+.gen-result.show{display:block}
+.gen-result .pw{display:flex;justify-content:space-between;align-items:center;padding:6px 4px;border-bottom:1px dashed var(--line);font-family:monospace;font-size:14px;letter-spacing:1px}
+.gen-result .pw:last-child{border-bottom:none}
+
+.filter-bar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.filter-bar select,.filter-bar .input{flex:1;min-width:120px}
+.filter-bar .input{padding:10px 12px;font-size:14px}
+
+.table{width:100%;border-collapse:collapse;font-size:13px}
+.table th{text-align:left;color:var(--muted);font-weight:600;padding:8px 6px;border-bottom:1px solid var(--line);font-size:12px}
+.table td{padding:10px 6px;border-bottom:1px solid var(--line)}
+.table .code{font-family:monospace;font-weight:700;letter-spacing:1px}
+.badge{display:inline-block;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600}
+.badge.active{background:rgba(74,222,128,.15);color:var(--green)}
+.badge.exhausted{background:rgba(248,113,113,.15);color:var(--red)}
+.badge.disabled{background:rgba(143,141,168,.2);color:var(--muted)}
+.badge.quiz{background:rgba(255,154,92,.15);color:var(--accent)}
+.badge.egg{background:rgba(255,107,157,.15);color:var(--accent2)}
+.bar{height:6px;background:var(--bg2);border-radius:4px;overflow:hidden;min-width:60px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.copy-btn{background:transparent;color:var(--accent);font-size:12px;padding:3px 8px;border:1px solid var(--line);border-radius:6px}
+
+.login-box{max-width:380px;margin:60px auto}
+.login-box .hero{text-align:center;margin-bottom:20px}
+.login-box .hero .emoji{font-size:48px}
+.login-box .hero h1{font-size:22px;margin:8px 0 4px}
+.login-box .hero p{font-size:13px;color:var(--muted)}
+
+.toast{position:fixed;left:50%;bottom:50px;transform:translateX(-50%) translateY(20px);background:#000;color:#fff;padding:10px 20px;border-radius:24px;font-size:14px;opacity:0;pointer-events:none;transition:.3s;z-index:999}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.modal-mask{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px}
+.modal-mask.show{display:flex}
+.modal{background:var(--card);border-radius:16px;padding:24px;max-width:400px;width:100%;text-align:center;border:1px solid var(--line)}
+.modal h3{font-size:18px;margin-bottom:12px}
+.modal p{font-size:14px;color:var(--text2);margin-bottom:18px;line-height:1.7}
+.modal .input{text-align:center}
+.loading{text-align:center;color:var(--muted);padding:40px 0;font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap" id="root"></div>
+<div class="toast" id="toast"></div>
+<div class="modal-mask" id="modalMask"><div class="modal"><h3 id="mTitle"></h3><p id="mBody"></p><button class="btn btn-primary" onclick="closeModal()">知道了</button></div></div>
+
+<script>
+const S = window.CatQuizStore;
+let filterType = "all";
+let filterBatch = "all";
+let searchKw = "";
+let allPasswords = [];
+
+function toast(m){ const t=document.getElementById("toast"); t.textContent=m; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2200); }
+function openModal(t,b){ document.getElementById("mTitle").textContent=t; document.getElementById("mBody").textContent=b; document.getElementById("modalMask").classList.add("show"); }
+function closeModal(){ document.getElementById("modalMask").classList.remove("show"); }
+function copyText(t){ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(()=>toast("已复制")); } else { const ta=document.createElement("textarea"); ta.value=t; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy");toast("已复制")}catch(e){} document.body.removeChild(ta); } }
+
+/* ============ 登录 ============ */
+function renderLogin(){
+  const el = document.createElement("div");
+  el.innerHTML = `
+    <div class="login-box">
+      <div class="hero"><div class="emoji">🔐</div><h1>猫奴测评 · 管理后台</h1><p>请输入管理员密码</p></div>
+      <div class="card">
+        <div class="field"><input class="input" id="adminPwd" type="password" placeholder="管理员密码" autocomplete="off"></div>
+        <button class="btn btn-primary" style="width:100%" id="loginBtn">登录</button>
+        <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:12px">默认密码：admin123（登录后请修改）</p>
+      </div>
+    </div>
+  `;
+  document.getElementById("root").appendChild(el);
+  document.getElementById("loginBtn").addEventListener("click", doLogin);
+  document.getElementById("adminPwd").addEventListener("keydown", e=>{ if(e.key==="Enter") doLogin(); });
+}
+
+async function doLogin(){
+  const v = document.getElementById("adminPwd").value;
+  if(!v){ toast("请输入管理员密码"); return; }
+  const btn = document.getElementById("loginBtn");
+  btn.disabled = true; btn.textContent = "登录中…";
+  try {
+    const res = await S.verifyAdmin(v);
+    if(res.ok){ sessionStorage.setItem("cat_admin_ok","1"); render(); }
+    else toast("管理员密码错误");
+  } catch(e){ toast("网络异常，请稍后重试"); console.error(e); }
+  finally { btn.disabled = false; btn.textContent = "登录"; }
+}
+
+/* ============ 主界面 ============ */
+async function render(){
+  const root = document.getElementById("root");
+  root.innerHTML = "";
+  if(sessionStorage.getItem("cat_admin_ok") !== "1"){ renderLogin(); return; }
+  root.innerHTML = '<div class="loading">正在加载数据…</div>';
+  try {
+    allPasswords = await S.adminListPasswords();
+    root.innerHTML = "";
+    renderTopbar(root);
+    renderStats(root);
+    renderGenerator(root);
+    renderList(root);
+    renderAdminSetting(root);
+  } catch(e){
+    root.innerHTML = '<div class="loading">数据加载失败，请刷新重试</div>';
+    console.error(e);
+  }
+}
+
+function renderTopbar(root){
+  const el = document.createElement("div");
+  el.className = "topbar";
+  el.innerHTML = `
+    <div class="brand"><div class="logo">🐱</div><div class="brand-name">猫奴测评后台<small>密码管理与发放</small></div></div>
+    <button class="btn btn-ghost btn-sm" id="logoutBtn">退出</button>
+  `;
+  root.appendChild(el);
+  document.getElementById("logoutBtn").addEventListener("click", ()=>{ sessionStorage.removeItem("cat_admin_ok"); render(); });
+}
+
+function renderStats(root){
+  const list = allPasswords;
+  const quiz = list.filter(p=>p.type==="quiz");
+  const egg = list.filter(p=>p.type==="egg");
+  const remaining = list.filter(p=>p.status==="active").reduce((a,p)=>a+(p.max_uses-p.used),0);
+  const s = {
+    total: list.length,
+    quizTotal: quiz.length,
+    eggTotal: egg.length,
+    active: list.filter(p=>p.status==="active").length,
+    exhausted: list.filter(p=>p.status==="exhausted").length,
+    remaining,
+  };
+  const el = document.createElement("div");
+  el.className = "card";
+  el.innerHTML = `
+    <h2>数据概览</h2>
+    <div class="stat-grid">
+      <div class="stat"><div class="num a">${s.total}</div><div class="lbl">密码总数</div></div>
+      <div class="stat"><div class="num g">${s.active}</div><div class="lbl">可用密码</div></div>
+      <div class="stat"><div class="num">${s.remaining}</div><div class="lbl">剩余可用次数</div></div>
+      <div class="stat"><div class="num r">${s.exhausted}</div><div class="lbl">已用完</div></div>
+      <div class="stat"><div class="num">${s.quizTotal}</div><div class="lbl">测评密码</div></div>
+      <div class="stat"><div class="num">${s.eggTotal}</div><div class="lbl">彩蛋密码</div></div>
+    </div>
+  `;
+  root.appendChild(el);
+}
+
+function renderGenerator(root){
+  const el = document.createElement("div");
+  el.className = "card";
+  el.innerHTML = `
+    <h2>生成新密码</h2>
+    <div class="row2">
+      <div class="field"><label>密码类型</label>
+        <select class="input" id="genType">
+          <option value="quiz">测评密码（限3次）</option>
+          <option value="egg">彩蛋密码（限1次）</option>
+        </select>
+      </div>
+      <div class="field"><label>生成数量</label>
+        <input class="input" id="genCount" type="number" value="10" min="1" max="500">
+      </div>
+    </div>
+    <div class="field"><label>批次备注</label>
+      <input class="input" id="genBatch" type="text" placeholder="例如：10月13日上新 / 双11活动">
+    </div>
+    <button class="btn btn-primary" style="width:100%" id="genBtn">生成密码</button>
+    <div class="gen-result" id="genResult"></div>
+  `;
+  root.appendChild(el);
+  document.getElementById("genBtn").addEventListener("click", async ()=>{
+    const type = document.getElementById("genType").value;
+    const count = parseInt(document.getElementById("genCount").value) || 0;
+    const batch = document.getElementById("genBatch").value.trim() || "未命名批次";
+    if(count < 1 || count > 500){ toast("数量需在 1-500 之间"); return; }
+    const maxUses = type === "egg" ? 1 : 3;
+    const btn = document.getElementById("genBtn");
+    btn.disabled = true; btn.textContent = "生成中…";
+    try {
+      const res = await S.generateBatch(count, batch, type, maxUses);
+      const codes = (res && res.codes) || [];
+      const box = document.getElementById("genResult");
+      box.innerHTML = `<div style="font-weight:700;color:var(--green);margin-bottom:8px">已生成 ${codes.length} 个${type==="egg"?"彩蛋":"测评"}密码（批次：${batch}）</div>` +
+        codes.map(c=>`<div class="pw"><span>${c}</span><button class="copy-btn" data-c="${c}">复制</button></div>`).join("") +
+        `<div style="margin-top:10px"><button class="btn btn-gold btn-sm" id="copyAllBtn">一键复制全部</button></div>`;
+      box.classList.add("show");
+      box.querySelectorAll(".copy-btn").forEach(b=>b.addEventListener("click", ()=>copyText(b.dataset.c)));
+      document.getElementById("copyAllBtn").addEventListener("click", ()=>copyText(codes.join("\n")));
+      toast("生成成功");
+      render();
+    } catch(e){ toast("生成失败，请稍后重试"); console.error(e); }
+    finally { btn.disabled = false; btn.textContent = "生成密码"; }
+  });
+}
+
+function renderList(root){
+  let list = allPasswords;
+  if(filterType !== "all") list = list.filter(p=>p.type===filterType);
+  if(filterBatch !== "all") list = list.filter(p=>p.batch===filterBatch);
+  if(searchKw) list = list.filter(p=>p.code.toLowerCase().includes(searchKw.toLowerCase()));
+  list = list.slice().sort((a,b)=> (b.created_at||"").localeCompare(a.created_at||""));
+
+  const batches = [...new Set(allPasswords.map(p=>p.batch).filter(Boolean))];
+  const el = document.createElement("div");
+  el.className = "card";
+  el.innerHTML = `
+    <h2>密码列表</h2>
+    <div class="filter-bar">
+      <select class="input" id="fType">
+        <option value="all" ${filterType==="all"?"selected":""}>全部类型</option>
+        <option value="quiz" ${filterType==="quiz"?"selected":""}>测评密码</option>
+        <option value="egg" ${filterType==="egg"?"selected":""}>彩蛋密码</option>
+      </select>
+      <select class="input" id="fBatch">
+        <option value="all" ${filterBatch==="all"?"selected":""}>全部批次</option>
+        ${batches.map(b=>`<option value="${b}" ${filterBatch===b?"selected":""}>${b}</option>`).join("")}
+      </select>
+      <input class="input" id="fSearch" type="text" placeholder="搜索密码" value="${searchKw}">
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <span style="font-size:13px;color:var(--muted)">共 ${list.length} 条</span>
+      <button class="btn btn-gold btn-sm" id="exportBtn">导出当前列表 CSV</button>
+    </div>
+    ${list.length===0 ? '<div style="text-align:center;color:var(--muted);padding:30px 0">暂无密码</div>' : `
+    <div style="overflow-x:auto"><table class="table">
+      <thead><tr><th>密码</th><th>类型</th><th>批次</th><th>剩余/上限</th><th>状态</th><th>操作</th></tr></thead>
+      <tbody>
+        ${list.map(p=>{
+          const left = (p.max_uses||3) - (p.used||0);
+          const pct = Math.round((p.used||0)/(p.max_uses||3)*100);
+          return `<tr>
+            <td><span class="code">${p.code}</span></td>
+            <td><span class="badge ${p.type}">${p.type==="quiz"?"测评":"彩蛋"}</span></td>
+            <td>${p.batch||"-"}</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:6px">
+                <span style="white-space:nowrap">${left}/${p.max_uses||3}</span>
+                <div class="bar"><i style="width:${pct}%"></i></div>
+              </div>
+            </td>
+            <td><span class="badge ${p.status}">${S.statusText(p.status)}</span></td>
+            <td style="white-space:nowrap">
+              <button class="copy-btn" data-c="${p.code}">复制</button>
+              ${p.status==="active" ? `<button class="btn btn-danger btn-sm" data-disable="${p.code}" style="margin-left:4px">停用</button>` : `<button class="btn btn-ghost btn-sm" data-enable="${p.code}" style="margin-left:4px">启用</button>`}
+            </td>
+          </tr>`;
+        }).join("")}
+      </tbody>
+    </table></div>`}
+  `;
+  root.appendChild(el);
+
+  document.getElementById("fType").addEventListener("change", e=>{ filterType=e.target.value; render(); });
+  document.getElementById("fBatch").addEventListener("change", e=>{ filterBatch=e.target.value; render(); });
+  document.getElementById("fSearch").addEventListener("input", e=>{ searchKw=e.target.value; render(); });
+  document.getElementById("exportBtn").addEventListener("click", exportList);
+
+  el.querySelectorAll("[data-c]").forEach(b=>b.addEventListener("click", ()=>copyText(b.dataset.c)));
+  el.querySelectorAll("[data-disable]").forEach(b=>b.addEventListener("click", ()=>setStatus(b.dataset.disable, "disabled")));
+  el.querySelectorAll("[data-enable]").forEach(b=>b.addEventListener("click", ()=>setStatus(b.dataset.enable, "active")));
+}
+
+async function setStatus(code, status){
+  try {
+    await S.setStatus(code, status);
+    toast(status==="disabled"?"已停用":"已启用");
+    render();
+  } catch(e){ toast("操作失败，请稍后重试"); console.error(e); }
+}
+
+function exportList(){
+  let list = allPasswords;
+  if(filterType!=="all") list=list.filter(p=>p.type===filterType);
+  if(filterBatch!=="all") list=list.filter(p=>p.batch===filterBatch);
+  if(searchKw) list=list.filter(p=>p.code.toLowerCase().includes(searchKw.toLowerCase()));
+  const header="密码,类型,批次,上限,已用,剩余,状态";
+  const rows=list.map(p=>`${p.code},${p.type==="quiz"?"测评":"彩蛋"},${p.batch||""},${p.max_uses||3},${p.used||0},${(p.max_uses||3)-(p.used||0)},${S.statusText(p.status)}`);
+  const csv="\uFEFF"+[header,...rows].join("\n");
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="猫奴测评密码列表.csv"; a.click();
+  toast("已导出");
+}
+
+function renderAdminSetting(root){
+  const el = document.createElement("div");
+  el.className = "card";
+  el.innerHTML = `
+    <h2>管理员设置</h2>
+    <div class="field"><label>修改管理员密码</label>
+      <input class="input" id="newAdminPwd" type="password" placeholder="输入新密码（至少6位）">
+    </div>
+    <button class="btn btn-ghost" style="width:100%" id="changeAdminBtn">修改密码</button>
+  `;
+  root.appendChild(el);
+  document.getElementById("changeAdminBtn").addEventListener("click", async ()=>{
+    const v = document.getElementById("newAdminPwd").value.trim();
+    if(v.length < 6){ toast("新密码至少 6 位"); return; }
+    const btn = document.getElementById("changeAdminBtn");
+    btn.disabled = true; btn.textContent = "修改中…";
+    try {
+      await S.changeAdmin(v);
+      toast("管理员密码已修改");
+      document.getElementById("newAdminPwd").value="";
+    } catch(e){ toast("修改失败，请稍后重试"); console.error(e); }
+    finally { btn.disabled = false; btn.textContent = "修改密码"; }
+  });
+}
+
+render();
+</script>
+</body>
+</html>
