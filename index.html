@@ -76,18 +76,18 @@ button{font-family:inherit;cursor:pointer;border:none;outline:none}
 /* 结果页 */
 .result-head{text-align:center;padding:10px 0 20px}
 .result-badge{display:inline-block;padding:6px 16px;border-radius:20px;background:rgba(255,107,157,.15);color:var(--accent2);font-size:13px;font-weight:700;margin-bottom:14px}
-.result-title{font-size:30px;font-weight:800;margin-bottom:8px}
+.result-title{font-size:30px;font-weight:800;margin-bottom:8px;color:#f5f3ef}
 .result-emoji{font-size:46px;margin-bottom:10px}
 .result-quote{font-size:16px;color:var(--gold);font-weight:600;margin-bottom:6px}
 .result-sub{font-size:14px;color:var(--text2)}
-.section-title{font-size:15px;font-weight:700;margin:22px 0 12px;display:flex;align-items:center;gap:8px}
+.section-title{font-size:15px;font-weight:700;margin:22px 0 12px;display:flex;align-items:center;gap:8px;color:#f5f3ef}
 .section-title::before{content:"";width:4px;height:16px;background:linear-gradient(var(--accent),var(--accent2));border-radius:2px}
 .desc{font-size:14px;color:var(--text2);line-height:1.8}
 .tag-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .tag{font-size:13px;padding:6px 12px;border-radius:20px;background:var(--bg2);color:var(--accent);border:1px solid var(--line)}
 .knowledge{background:var(--bg2);border-left:3px solid var(--gold);border-radius:10px;padding:14px 16px;font-size:14px;color:var(--text2);line-height:1.8;margin-top:8px}
 .knowledge b{color:var(--gold)}
-.chart-box{height:220px;margin-top:8px}
+.chart-box{height:260px;margin-top:8px}
 .action-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
 .action-row .btn{flex:1;min-width:130px}
 .hint{font-size:12px;color:var(--muted);text-align:center;margin-top:14px}
@@ -106,6 +106,9 @@ button{font-family:inherit;cursor:pointer;border:none;outline:none}
 
 /* toast */
 .toast{position:fixed;left:50%;bottom:60px;transform:translateX(-50%) translateY(20px);background:#000;color:#fff;padding:10px 20px;border-radius:24px;font-size:14px;opacity:0;pointer-events:none;transition:.3s;z-index:999}
+/* 长图截图容器：所有文字颜色写死字面量，避免 html2canvas 克隆时 CSS 变量继承失效 */
+#resultCard, #resultCard .brand, #resultCard .desc, #resultCard .q-title{color:#f5f3ef}
+#resultCard .knowledge{color:#c7c5d6}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* 模态 */
@@ -475,7 +478,7 @@ function renderQuiz(){
       <div id="opts">${opts}</div>
       <div class="nav-row">
         <button class="btn btn-ghost" id="prevBtn" ${state.current===0?"disabled style=opacity:.4":""}>上一题</button>
-        <button class="btn btn-primary" id="nextBtn" ${state.answers[state.current]===undefined?"disabled style=opacity:.4":""}>${state.current===total-1?"查看结果":"下一题"}</button>
+        <button class="btn btn-ghost" style="opacity:.55;pointer-events:none">${state.current===total-1?"选完自动出结果":"选择后自动进入下一题"}</button>
       </div>
     </div>
   `;
@@ -484,14 +487,15 @@ function renderQuiz(){
   optsBox.querySelectorAll(".opt").forEach(b=>{
     b.addEventListener("click", ()=>{
       state.answers[state.current] = parseInt(b.dataset.i);
-      renderQuiz();
+      renderQuiz(); // 立即高亮选中项
+      // 短暂停留让用户看到选中效果，然后自动跳题
+      setTimeout(()=>{
+        if(state.current === total-1){ calcResult(); }
+        else { state.current++; renderQuiz(); }
+      }, 260);
     });
   });
   document.getElementById("prevBtn").addEventListener("click", ()=>{ state.current--; renderQuiz(); });
-  document.getElementById("nextBtn").addEventListener("click", ()=>{
-    if(state.current === total-1){ calcResult(); }
-    else { state.current++; renderQuiz(); }
-  });
 }
 
 function dimName(d){ return {A:"情感依赖",B:"控制边界",C:"审美仪式",D:"社交表达"}[d]; }
@@ -597,8 +601,8 @@ function renderResult(){
       chart.setOption({
         radar:{
           indicator: dims.map(d=>({name:d,max:24})),
-          center:["50%","52%"], radius:"65%",
-          axisName:{color:"#c7c5d6",fontSize:12},
+          center:["50%","50%"], radius:"46%",
+          axisName:{color:"#c7c5d6",fontSize:12,padding:[6,6,6,6]},
           splitArea:{areaStyle:{color:["rgba(255,255,255,.02)","rgba(255,255,255,.04)"]}},
           splitLine:{lineStyle:{color:"rgba(255,255,255,.12)"}},
           axisLine:{lineStyle:{color:"rgba(255,255,255,.12)"}}
@@ -711,16 +715,22 @@ function renderCatView(){
         <div class="section-title">你的猫奴人格</div>
         <div class="desc">${r.emoji} ${r.name} · ${r.quote}</div>
       </div>
-      <div class="action-row">
-        <button class="btn btn-primary" id="saveBtn2">📷 保存长图</button>
-        <button class="btn btn-ghost" id="shareBtn2">🔗 复制分享链接</button>
+      <div class="qr-footer">
+        <div id="qrBox2"></div>
+        <div class="qr-text">扫码进店铺，解锁全部人格报告<br><span style="font-size:11px;color:#8f8da8">测测你是哪种猫奴 · 趣味测评</span></div>
       </div>
-      <div class="action-row">
-        <button class="btn btn-ghost" id="backResult">🔄 返回结果页</button>
-      </div>
+    </div>
+
+    <div class="action-row">
+      <button class="btn btn-primary" id="saveBtn2">📷 保存长图</button>
+      <button class="btn btn-ghost" id="shareBtn2">🔗 复制分享链接</button>
+    </div>
+    <div class="action-row">
+      <button class="btn btn-ghost" id="backResult">🔄 返回结果页</button>
     </div>
   `;
   app.innerHTML=""; app.appendChild(el);
+  renderQR("qrBox2", SHOP_URL, 110);
   document.getElementById("saveBtn2").addEventListener("click", saveImage);
   document.getElementById("shareBtn2").addEventListener("click", shareResult);
   document.getElementById("backResult").addEventListener("click", ()=>{ state.step="result"; render(); });
