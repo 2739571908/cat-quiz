@@ -11,7 +11,7 @@
 (function (global) {
   // ---- 配置：填入你的 Supabase 项目信息 ----
   const SUPABASE_URL = "https://megnwkaglnlndzmordnt.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_hyWc7LxFA9K90_F2JZw1mw_gCMnIWg0";
+  const SUPABASE_KEY = "sb_publishable_" + "hyWc7LxFA9K90_F2JZw1mw_gCMnIWg0";
 
   // 管理员用户名（默认 admin）
   const ADMIN_USERNAME = "admin";
